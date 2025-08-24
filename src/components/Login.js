@@ -1,6 +1,11 @@
 import {useState, useRef} from 'react' 
 import Header from './Header'
 import { checkValidData } from '../utils/Validate';
+import inflixcover from "../images/INFLIX_COVER1.jpg";
+import { auth } from '../utils/firebase';
+import {createUserWithEmailAndPassword } from "firebase/auth";
+import {signInWithEmailAndPassword } from "firebase/auth";
+
 
 const Login = () => {
   const [isSignIn, setIsSignIn] = useState(true);
@@ -8,19 +13,58 @@ const Login = () => {
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [passMatch, setPassMatch] = useState(null);
 
   const toggleSignIn = () => {
     setIsSignIn(!isSignIn);
   };
   const handleButtonClick = () => {
+    
     console.log(emailRef.current.value);
     console.log(passwordRef.current.value);
     const message = checkValidData(emailRef.current.value, passwordRef.current.value);
     setErrorMessage(message);
     console.log(message);
-    if(passwordRef.current.value !== confirmPasswordRef.current.value && !isSignIn) {
-      setErrorMessage("Passwords do not match");
+    if(isSignIn===false){
+      if(passwordRef.current.value !== confirmPasswordRef.current.value) {
+        setPassMatch("Passwords do not match");
+      }
     }
+    if(message) return;
+    if(!isSignIn){
+      //Sign Up Logic
+      createUserWithEmailAndPassword(auth, emailRef.current.value, passwordRef.current.value)
+  .then((userCredential) => {
+    // Signed up 
+    const user = userCredential.user;
+    console.log(user);
+    // ...
+  })
+  .catch((error) => {
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    setErrorMessage(errorCode + "-" + errorMessage);
+    // ..
+  });
+
+    }
+    else{
+      //Sign In Logic
+      signInWithEmailAndPassword(auth, emailRef.current.value, passwordRef.current.value)
+  .then((userCredential) => {
+    // Signed in 
+    const user = userCredential.user;
+    console.log(user);
+    // ...
+  })
+  .catch((error) => {
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    setErrorMessage(errorCode + "-" + errorMessage);
+  });
+
+    }
+
   };
 
   return (
@@ -29,7 +73,7 @@ const Login = () => {
       <div className="absolute inset-0 -z-10">
   <img
     className="w-full h-full object-cover"
-    src="https://i.pinimg.com/1200x/19/8b/2f/198b2f01e73b905772279616eccc7c65.jpg"
+    src={inflixcover}
     alt="netflix-background-image"
   />
   {/* Black overlay */}
@@ -43,28 +87,33 @@ const Login = () => {
       
       
 {/* Form Centered */}
-<div className="flex flex-1 items-center justify-center text-white overflow-y-auto border border-white p-8">
-  <div className="p-8 bg-black/70 rounded-lg w-[450px] max-h-[800px] flex flex-col justify-between mt-auto">
+<div className="flex flex-1 items-center justify-center text-white  overflow-y-auto p-8">
+  <div className="p-8 bg-black/60 rounded-lg w-[450px] max-h-[800px] flex flex-col justify-between mt-auto">
 
     <form onSubmit={(e) => e.preventDefault()} className="flex flex-col w-full space-y-4">
-      <h1 className="text-3xl font-bold">{isSignIn ? "Sign In" : "Sign Up"}</h1>
-      {isSignIn===false && <input
+      <h1 className="login_name text-3xl font-bold text-[red]">{isSignIn ? "Sign In" : "Sign Up"}</h1>
+      {isSignIn===false && 
+      <div className='input-wrapper rounded'>
+      <input
         type="text"
         placeholder="Enter Full Name"
         className="w-full p-3 rounded bg-zinc-800/80 
                    text-white placeholder-gray-400 
                    focus:outline-none focus:ring-2 focus:ring-red-600"
-      /> }
-
+      /></div> }
+      <div className="input-wrapper rounded">
       <input
         ref={emailRef}
         type="email"
         placeholder="Email or mobile number"
-        className="w-full p-3 rounded bg-zinc-800/80 
+        className=" w-full p-3 rounded bg-zinc-800/80 
                    text-white placeholder-gray-400 
                    focus:outline-none focus:ring-2 focus:ring-red-600"
+        onChange={() => setErrorMessage(null)}
       />
-
+      </div>
+      <p className='text-red-600 font-bold text-lg'>{isSignIn===false? errorMessage : null}</p>
+      <div className='input-wrapper rounded'>
       <input
         ref={passwordRef}
         type="password"
@@ -72,18 +121,24 @@ const Login = () => {
         className="w-full p-3 rounded bg-zinc-800/80 
                    text-white placeholder-gray-400 
                    focus:outline-none focus:ring-2 focus:ring-red-600"
-      />
-        {isSignIn===false && <input
+        onChange={() => {
+                 setErrorMessage(null);
+                 setPassMatch(null);
+  }}
+      /></div>
+        {isSignIn===false && <div className='input-wrapper rounded'>
+        <input
         ref={confirmPasswordRef}
         type="password"
         placeholder="Confirm Password"
         className="w-full p-3 rounded bg-zinc-800/80 
                    text-white placeholder-gray-400 
                    focus:outline-none focus:ring-2 focus:ring-red-600"
-      />}
-      <p className='text-red-600 font-bold text-lg py-2'>{errorMessage}</p>
+        onChange={() => setPassMatch(null)}
+      /></div>}
+      <p className='text-red-600 font-bold text-lg'>{isSignIn? errorMessage : passMatch}</p>
 
-      <button onClick={handleButtonClick} className="w-full bg-red-800 p-3 rounded font-semibold hover:bg-red-700 transition">
+      <button onClick={handleButtonClick} className="w-full bg-red-700 p-3 rounded font-semibold hover:bg-[#FF001E] transition">
         {isSignIn ? "Sign In" : "Sign Up"}
       </button>
 
