@@ -8,7 +8,7 @@ import { getAuth } from "firebase/auth";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyCo_Q1IUQ6kS6AZlpiTHaxfGDnsKnFfJ98",
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: "inflix-gpt-215dd.firebaseapp.com",
   projectId: "inflix-gpt-215dd",
   storageBucket: "inflix-gpt-215dd.firebasestorage.app",
