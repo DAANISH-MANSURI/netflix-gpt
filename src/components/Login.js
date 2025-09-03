@@ -1,70 +1,108 @@
-import {useState, useRef} from 'react' 
-import Header from './Header'
+import {useState, useRef} from 'react';
+import Header from './Header';
 import { checkValidData } from '../utils/Validate';
-import inflixcover from "../images/INFLIX_COVER1.jpg";
 import { auth } from '../utils/firebase';
-import {createUserWithEmailAndPassword } from "firebase/auth";
+import {createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import {signInWithEmailAndPassword } from "firebase/auth";
+import { useDispatch } from 'react-redux';
+import { addUser } from '../utils/userSlice';
+import { useNavigate } from 'react-router-dom';
+import { Inflix_Background_IMG_URL } from '../utils/constants';
+
 
 
 const Login = () => {
   const [isSignIn, setIsSignIn] = useState(true);
+  const nameRef = useRef(null);
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const [passMatch, setPassMatch] = useState(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const toggleSignIn = () => {
     setIsSignIn(!isSignIn);
   };
-  const handleButtonClick = () => {
-    
-    console.log(emailRef.current.value);
-    console.log(passwordRef.current.value);
-    const message = checkValidData(emailRef.current.value, passwordRef.current.value);
+
+  const handleButtonClick = async () => {
+    const email = emailRef.current.value;
+    const password = passwordRef.current.value;
+    let name = "";
+    let confirmPassword = "";
+
+    // Validation
+    const message = checkValidData(email, password);
     setErrorMessage(message);
-    console.log(message);
-    if(isSignIn===false){
-      if(passwordRef.current.value !== confirmPasswordRef.current.value) {
+    if (message) return;
+
+    // Password matching for signup
+    if (!isSignIn) {
+      name = nameRef.current?.value || "";
+      confirmPassword = confirmPasswordRef.current?.value || "";
+
+      if (!name) {
+        setErrorMessage("Name is required");
+        return;
+      }
+
+      if (password !== confirmPassword) {
         setPassMatch("Passwords do not match");
+        return;
       }
     }
-    if(message) return;
-    if(!isSignIn){
-      //Sign Up Logic
-      createUserWithEmailAndPassword(auth, emailRef.current.value, passwordRef.current.value)
-  .then((userCredential) => {
-    // Signed up 
-    const user = userCredential.user;
-    console.log(user);
-    // ...
-  })
-  .catch((error) => {
-    const errorCode = error.code;
-    const errorMessage = error.message;
-    setErrorMessage(errorCode + "-" + errorMessage);
-    // ..
-  });
 
+    try {
+      if (!isSignIn) {
+        // ---------- SIGN UP FLOW ----------
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Update profile with name
+        await updateProfile(user, { displayName: name });
+
+        // Refresh user data
+        await user.reload();
+
+        // Redux store update
+        const { uid, email: userEmail, displayName, photoURL } = auth.currentUser;
+        dispatch(addUser({
+          uid: uid,
+          email: userEmail,
+          displayName: displayName,
+          photoURL: photoURL
+        }));
+        navigate("/browse");
+       
+      } 
+      else {
+        // ---------- SIGN IN FLOW ----------
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  const currentUser = userCredential.user;
+
+  //  Ensure fresh data
+  await currentUser.reload();
+  const refreshedUser = auth.currentUser;
+
+  // Redux store me save
+  dispatch(addUser({
+    uid: refreshedUser.uid,
+    email: refreshedUser.email,
+    displayName: refreshedUser.displayName,
+    photoURL: refreshedUser.photoURL
+  }));
+    navigate("/browse");
+
+}
+
+      // Clear errors
+      setErrorMessage(null);
+      setPassMatch(null);
+
+    } catch (error) {
+      setErrorMessage(error.code + " - " + error.message);
     }
-    else{
-      //Sign In Logic
-      signInWithEmailAndPassword(auth, emailRef.current.value, passwordRef.current.value)
-  .then((userCredential) => {
-    // Signed in 
-    const user = userCredential.user;
-    console.log(user);
-    // ...
-  })
-  .catch((error) => {
-    const errorCode = error.code;
-    const errorMessage = error.message;
-    setErrorMessage(errorCode + "-" + errorMessage);
-  });
-
-    }
-
   };
 
   return (
@@ -72,9 +110,9 @@ const Login = () => {
       {/* Background Image */}
       <div className="absolute inset-0 -z-10">
   <img
-    className="w-full h-full object-cover"
-    src={inflixcover}
-    alt="netflix-background-image"
+    src={Inflix_Background_IMG_URL}
+    alt="Netflix Background"
+    className="absolute inset-0 w-full h-full object-cover"
   />
   {/* Black overlay */}
   <div className="absolute inset-0 bg-black/50"></div>
@@ -95,6 +133,7 @@ const Login = () => {
       {isSignIn===false && 
       <div className='input-wrapper rounded'>
       <input
+        ref={nameRef}
         type="text"
         placeholder="Enter Full Name"
         className="w-full p-3 rounded bg-zinc-800/80 
@@ -153,7 +192,7 @@ const Login = () => {
       </button>
     </form>
 
-    {/* Checkbox + Signup link same alignment */}
+    {/* Checkbox and Signup link same alignment */}
     <div className="flex flex-col w-full space-y-4 mt-6">
       <label className="flex items-center space-x-2 cursor-pointer">
         <input
