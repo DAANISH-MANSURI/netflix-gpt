@@ -37,6 +37,9 @@
 - useUpcomingMovies Custom hook
 - usePopularTvShow Custom hook
 - useTopRatedTvShow Custom hook
+- GPT Search Page
+- GPT Search Bar
+- (BONUS*) Multi-language Feature in our App
 
 
 # Features

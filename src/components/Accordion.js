@@ -26,7 +26,7 @@ const Accordion = () => {
   };
 
   return (
-    <div className="relative w-60 mx-4">
+    <div className="relative w-fit -mr-2">
       {/* Profile Image (Trigger) */}
       <div
         className="flex justify-end cursor-pointer"
@@ -43,15 +43,15 @@ const Accordion = () => {
 
       {/* Dropdown Content (absolute so it overlaps) */}
       {open && (
-        <div className="absolute right-0 mt-2 bg-black/70 rounded shadow-lg z-50 w-fit max-w-xs">
-          <div className="px-4 py-3 flex flex-col space-y-2 text-white">
+        <div className="absolute right-0 mt-2 bg-black/70 rounded shadow-lg z-50 min-w-[200px]">
+          <div className=" px-4 py-3 flex flex-col space-y-2 text-white font-serif">
             <div className="flex items-center space-x-3">
               <img
                 src={user?.photoURL || inflixsmile} 
                 alt="Profile"
                 className="w-10 h-10 rounded-full object-cover"
               />
-              <p className="whitespace-nowrap">{user?.displayName}</p>
+              <p className="whitespace-normal">{user?.displayName}</p>
             </div>
             <p
               className="hover:underline cursor-pointer"

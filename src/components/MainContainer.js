@@ -7,7 +7,7 @@ const MainContainer = () => {
   // const movies = useSelector((store)=>store.movies?.nowPlayingMovies);
   const movies = useSelector((store)=>store.movies?.nowPlayingMovies);
   if(!movies) return null; // isko early return karna hai ydi movie nahi hai to.
-  const mainMovie = movies[0];
+  const mainMovie = movies[3];
   const {title, overview, id} = mainMovie;
   console.log("mainMovie", mainMovie);
   return (
